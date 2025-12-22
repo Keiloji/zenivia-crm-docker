@@ -1,25 +1,82 @@
+version: '3.4'
 
 services:
 ###> doctrine/doctrine-bundle ###
-  database:
-    image: postgres:${POSTGRES_VERSION:-16}-alpine
+  mailer:
+    image: axllent/mailpit
+    ports:
+      - "1025"
+      - "8025:8025"
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-app}
-      # You should definitely change the password in production
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
-      POSTGRES_USER: ${POSTGRES_USER:-app}
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    networks:
+      - symfony
+  database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: app
+      # Mise à jour avec les valeurs
+      POSTGRES_PASSWORD: SuperSecret!2025
+      POSTGRES_USER: zenivia_user
     healthcheck:
-      test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB:-app}", "-U", "${POSTGRES_USER:-app}"]
+      # Utilise les identifiants si ils sont passés en variables d'environnement, sinon ceux par défaut
+      test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB:-app}", "-U", "${POSTGRES_USER:-zenivia_user}"]
       timeout: 5s
       retries: 5
       start_period: 60s
     volumes:
       - database_data:/var/lib/postgresql/data:rw
-      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      # - ./docker/db/data:/var/lib/postgresql/data:rw
+    # Déclare le réseau
+    networks:
+      - symfony
 ###< doctrine/doctrine-bundle ###
+
+  # Service PHP-FPM : Exécute votre code Symfony
+  php:
+    build:
+      context: ./docker/php 
+      # Le Dockerfile doit se trouver à l'emplacement docker/php/Dockerfile
+      target: app_php
+    depends_on:
+      database:
+        condition: service_healthy # Attend que la DB soit prête
+    volumes:
+      - .:/srv/app:rw,cached # Monte le code source
+      - ./vendor:/srv/app/vendor:rw # Monte les dépendances Composer
+      - ./var:/srv/app/var:rw # Logs et Cache
+    # Déclare le réseau
+    networks:
+      - symfony
+    restart: unless-stopped
+
+  # Service Caddy (Web Server) : Expose l'application au monde extérieur
+  caddy:
+    image: caddy:2.7-alpine
+    depends_on:
+      - php
+    volumes:
+      # LIGNE CORRIGÉE : Monte le Caddyfile personnalisé pour configurer Symfony
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro 
+      - ./public:/srv/app/public:ro # Le dossier public de Symfony
+      - caddy_data:/data
+    environment:
+      # Pointez Caddy vers le service PHP
+      MERCURE_PUBLISH_URL: http://php:8000/.well-known/mercure
+    ports:
+      # L'API sera accessible sur http://localhost:80
+      - '80:80' 
+    # Déclare le réseau
+    networks:
+      - symfony
+    restart: unless-stopped
 
 volumes:
 ###> doctrine/doctrine-bundle ###
   database_data:
 ###< doctrine/doctrine-bundle ###
+  # Volumes supplémentaires
+  caddy_data:
+  
+networks:
+  symfony:

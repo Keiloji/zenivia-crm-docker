@@ -1,0 +1,28 @@
+:80 {
+    # Définit le répertoire racine de l'application Symfony
+    root * /srv/app/public
+
+    # Active la compression
+    encode gzip
+
+    # Log des requêtes
+    log
+
+    # Gère d'abord les fichiers statiques (assets).
+    # Cela permet à Caddy de servir CSS, JS, et images directement
+    # sans passer par PHP-FPM, optimisant les performances.
+    file_server
+
+    # Gère ensuite les requêtes dynamiques pour Symfony.
+    # Si le fichier n'a pas été trouvé par file_server (par exemple, /admin/client),
+    # Caddy réécrit le chemin vers index.php et le passe à PHP-FPM.
+    route {
+        # Remplace l'ancienne try_files {path} /index.php{query}
+        # Caddy utilise 'try_files' implicitement avec 'handle_errors'
+        # pour s'assurer que index.php reçoit les requêtes non résolues.
+        php_fastcgi php:9000 {
+            # Assure que le bon script est exécuté par FPM pour toutes les requêtes.
+            try_files {path} /index.php
+        }
+    }
+}

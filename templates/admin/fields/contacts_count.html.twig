@@ -1,0 +1,8 @@
+{# templates/admin/fields/contacts_count.html.twig #}
+{# Ce template est utilisé par ClientCrudController pour afficher le nombre de contacts #}
+{% if field.value is iterable %}
+    {# Affiche le nombre dans un badge stylisé #}
+    <span class="badge badge-info">{{ field.value | length }}</span>
+{% else %}
+    <span class="badge badge-secondary">0</span>
+{% endif %}
