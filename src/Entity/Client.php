@@ -7,6 +7,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+// AJOUT : Import pour la validation
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
 class Client
@@ -17,6 +19,14 @@ class Client
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    // AJOUT : Validation du Nom
+    #[Assert\NotBlank(message: "Le nom du client est obligatoire.")]
+    #[Assert\Length(
+        min: 2,
+        max: 255,
+        minMessage: "Le nom doit faire au moins {{ limit }} caractères.",
+        maxMessage: "Le nom ne peut pas dépasser {{ limit }} caractères."
+    )]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -50,6 +60,12 @@ class Client
     private Collection $appointments;
 
     #[ORM\Column(length: 255)]
+    // AJOUT : Validation de l'Email
+    #[Assert\NotBlank(message: "L'email est obligatoire.")]
+    #[Assert\Email(
+        message: "L'email '{{ value }}' n'est pas une adresse valide.",
+        mode: 'strict'
+    )]
     private ?string $email = null;
 
     public function __construct()
@@ -59,7 +75,6 @@ class Client
         $this->appointments = new ArrayCollection();
     }
 
-    // --- Correction pour le Formulaire de Relation ---
     /**
      * Utilisé par les formulaires de relation (comme Add Contact) pour afficher le nom du Client.
      */
@@ -67,7 +82,6 @@ class Client
     {
         return $this->name ?? 'Nouveau Client';
     }
-    // ------------------------------------------------
 
     public function getId(): ?int
     {
@@ -143,7 +157,6 @@ class Client
     public function removeContact(Contact $contact): static
     {
         if ($this->contacts->removeElement($contact)) {
-            // set the owning side to null (unless already changed)
             if ($contact->getClient() === $this) {
                 $contact->setClient(null);
             }
@@ -185,7 +198,6 @@ class Client
     public function removeTicket(Ticket $ticket): static
     {
         if ($this->tickets->removeElement($ticket)) {
-            // set the owning side to null (unless already changed)
             if ($ticket->getClient() === $this) {
                 $ticket->setClient(null);
             }
@@ -215,7 +227,6 @@ class Client
     public function removeAppointment(Appointment $appointment): static
     {
         if ($this->appointments->removeElement($appointment)) {
-            // set the owning side to null (unless already changed)
             if ($appointment->getClient() === $this) {
                 $appointment->setClient(null);
             }

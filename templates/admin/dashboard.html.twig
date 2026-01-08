@@ -1,0 +1,36 @@
+{# templates/admin/dashboard.html.twig #}
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}Tableau de Bord Zenivia{% endblock %}
+
+{% block main %}
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title" style="color: #0d6efd;">📅 Rendez-vous</h5>
+                    <p class="card-text display-4">{{ countAppointments }}</p>
+                    <p class="text-muted">Rendez-vous programmés au total</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title" style="color: #dc3545;">🎫 Tickets Support</h5>
+                    <p class="card-text display-4">{{ countTickets }}</p>
+                    <p class="text-muted">Tickets ouverts dans le système</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <strong>Bienvenue !</strong> Le système est 100% opérationnel.
+            </div>
+        </div>
+    </div>
+{% endblock %}

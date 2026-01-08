@@ -3,8 +3,13 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Client;
+use Doctrine\ORM\QueryBuilder;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
@@ -20,43 +25,47 @@ class ClientCrudController extends AbstractCrudController
     }
 
     /**
-     * Configuration globale du CRUD (titres, tri par défaut, champs de recherche).
+     * Configuration globale du CRUD.
      */
     public function configureCrud(Crud $crud): Crud
     {
         return $crud
             ->setEntityLabelInSingular('Client')
             ->setEntityLabelInPlural('Clients')
-            // Définir les champs consultables
             ->setSearchFields(['name', 'country', 'city', 'postalCode'])
-            // Trier par ID par défaut (le plus récent en premier)
             ->setDefaultSort(['id' => 'DESC']);
     }
 
     /**
-     * Configure les champs à afficher sur les différentes pages (Index, Formulaires, Détail).
+     * Optimisation majeure : On récupère les relations en une seule requête SQL (Join)
+     * au lieu d'une requête par ligne (N+1 Problem). Cela fluidifie l'affichage.
      */
+    public function createIndexQueryBuilder(SearchDto $searchDto, EntityDto $entityDto, FieldCollection $fields, FilterCollection $filters): QueryBuilder
+    {
+        return parent::createIndexQueryBuilder($searchDto, $entityDto, $fields, $filters)
+            ->leftJoin('entity.contacts', 'c')
+            ->addSelect('c')
+            ->leftJoin('entity.appointments', 'a')
+            ->addSelect('a');
+    }
+
     public function configureFields(string $pageName): iterable
     {
-        // --- CHAMPS POUR LA PAGE INDEX (LISTE) ---
-
+        // --- PAGE INDEX (LISTE) ---
         if (Crud::PAGE_INDEX === $pageName) {
             yield TextField::new('name', 'Nom du Client');
             yield TextField::new('country', 'Pays');
             yield EmailField::new('email', 'Email du Contact');
 
-            // Ce champ spécial utilise un template pour afficher le *nombre* de contacts
             yield CollectionField::new('contacts', 'Nb Contacts')
                 ->setTemplatePath('admin/fields/contacts_count.html.twig')
                 ->setSortable(false);
         }
 
-        // --- CHAMPS POUR LES FORMULAIRES (CRÉATION / ÉDITION) ---
+        // --- FORMULAIRES (CRÉATION / ÉDITION) ---
         if (Crud::PAGE_NEW === $pageName || Crud::PAGE_EDIT === $pageName) {
             yield TextField::new('name', 'Nom du Client');
-
             yield EmailField::new('email', 'Email du Contact');
-
             yield TextareaField::new('description', 'Description')
                 ->setHelp('Description interne de l\'entreprise.');
             yield TextField::new('city', 'Ville');
@@ -64,7 +73,7 @@ class ClientCrudController extends AbstractCrudController
             yield TextField::new('country', 'Pays');
         }
 
-        // --- CHAMPS POUR LA PAGE DE DÉTAIL ---
+        // --- PAGE DE DÉTAIL ---
         if (Crud::PAGE_DETAIL === $pageName) {
             yield IdField::new('id');
             yield TextField::new('name', 'Nom du Client');
@@ -73,9 +82,8 @@ class ClientCrudController extends AbstractCrudController
             yield TextField::new('postalCode', 'Code Postal');
             yield TextField::new('country', 'Pays');
 
-            // Affiche la *liste* réelle des contacts associés
             yield AssociationField::new('contacts', 'Liste des Contacts')
-                ->setTemplatePath('admin/fields/contacts_detail.html.twig'); // un meilleur affichage
+                ->setTemplatePath('admin/fields/contacts_detail.html.twig');
         }
     }
 }
