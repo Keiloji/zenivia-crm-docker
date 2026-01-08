@@ -5,10 +5,11 @@ namespace App\Entity;
 use App\Repository\AvailabilitySlotRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-// --- AJOUTER CET IMPORT ---
+use ApiPlatform\Metadata\ApiResource;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: AvailabilitySlotRepository::class)]
+#[ApiResource]
 class AvailabilitySlot
 {
     #[ORM\Id]

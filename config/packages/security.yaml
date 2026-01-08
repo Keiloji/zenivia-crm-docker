@@ -44,8 +44,13 @@ security:
         # 2. On autorise la lecture des disponibilités (pour afficher le calendrier)
         - { path: ^/api/availability, roles: PUBLIC_ACCESS }
 
-        # 3. NOUVEAU : On autorise la création de rendez-vous (pour les visiteurs)
+        # 3. On autorise la création de rendez-vous (pour les visiteurs)
         - { path: ^/api/appointment/book, roles: PUBLIC_ACCESS }
+
+        # 3.5. On autorise la documentation (L'accueil de l'API)
+        # Le signe $ signifie "la fin de l'URL", donc ça ne cible QUE /api tout court
+        - { path: ^/api$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/docs, roles: PUBLIC_ACCESS }
 
         # 4. Enfin, on bloque tout le reste de l'API (nécessite d'être connecté)
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }

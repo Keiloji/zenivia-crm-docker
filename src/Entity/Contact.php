@@ -5,10 +5,12 @@ namespace App\Entity;
 use App\Repository\ContactRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use ApiPlatform\Metadata\ApiResource;
+use Symfony\Component\Validator\Constraints as Assert;
 
-// Ajout de l'attribut pour les callbacks de cycle de vie (nécessaire pour @PrePersist)
 #[ORM\Entity(repositoryClass: ContactRepository::class)]
 #[ORM\HasLifecycleCallbacks]
+#[ApiResource]
 class Contact
 {
     #[ORM\Id]
@@ -17,25 +19,36 @@ class Contact
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
+    // AJOUT : Validation Prénom
+    #[Assert\NotBlank(message: "Le prénom est obligatoire.")]
+    #[Assert\Length(min: 2, max: 100, minMessage: "Le prénom doit faire au moins {{ limit }} caractères.")]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 100)]
+    // AJOUT : Validation Nom
+    #[Assert\NotBlank(message: "Le nom est obligatoire.")]
+    #[Assert\Length(min: 2, max: 100, minMessage: "Le nom doit faire au moins {{ limit }} caractères.")]
     private ?string $lastName = null;
 
     #[ORM\Column(length: 255)]
+    // AJOUT : Validation Email
+    #[Assert\NotBlank(message: "L'email est obligatoire.")]
+    #[Assert\Email(message: "L'email '{{ value }}' n'est pas valide.")]
     private ?string $email = null;
 
     #[ORM\Column(length: 20, nullable: true)]
+    // AJOUT : Validation Téléphone (Facultatif mais limité)
+    #[Assert\Length(max: 20, maxMessage: "Le numéro ne peut pas dépasser 20 caractères.")]
     private ?string $phone = null;
 
     #[ORM\ManyToOne(inversedBy: 'contacts')]
     #[ORM\JoinColumn(nullable: false)]
+    // AJOUT : Validation Client (Doit être valide)
+    #[Assert\NotNull(message: "Le contact doit être rattaché à un client.")]
     private ?Client $client = null;
 
-    // Nouveau champ createdAt avec le type "datetime_immutable"
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private ?\DateTimeImmutable $createdAt = null;
-
 
     // --- Getters et Setters ---
 
@@ -104,7 +117,6 @@ class Contact
         return $this;
     }
 
-    // Getter et Setter pour createdAt
     public function getCreatedAt(): ?\DateTimeImmutable
     {
         return $this->createdAt;
@@ -119,7 +131,6 @@ class Contact
 
     // --- Logique d'auto-remplissage ---
 
-    // Attribut de cycle de vie : appelé AVANT la persistance du nouvel objet
     #[ORM\PrePersist]
     public function setCreatedAtValue(): void
     {
@@ -128,7 +139,6 @@ class Contact
         }
     }
 
-    // Méthode magique pour un affichage propre dans EasyAdmin
     public function __toString(): string
     {
         return $this->firstName . ' ' . $this->lastName . ' (' . $this->email . ')';

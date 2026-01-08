@@ -7,18 +7,22 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-// AJOUT : Import pour la validation
+use ApiPlatform\Metadata\ApiResource;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
+#[ApiResource]
 class Client
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['ticket:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['ticket:read'])]
     // AJOUT : Validation du Nom
     #[Assert\NotBlank(message: "Le nom du client est obligatoire.")]
     #[Assert\Length(
@@ -60,6 +64,7 @@ class Client
     private Collection $appointments;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['ticket:read'])]
     // AJOUT : Validation de l'Email
     #[Assert\NotBlank(message: "L'email est obligatoire.")]
     #[Assert\Email(

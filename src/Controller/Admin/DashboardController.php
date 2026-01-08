@@ -8,7 +8,7 @@ use App\Entity\Ticket;
 use App\Entity\TicketComment;
 use App\Entity\Appointment;
 use App\Entity\AvailabilitySlot;
-use Doctrine\ORM\EntityManagerInterface; // <--- IMPORTANT : Pour parler à la BDD
+use Doctrine\ORM\EntityManagerInterface; 
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
@@ -31,15 +31,20 @@ class DashboardController extends AbstractDashboardController
     #[Route('/admin', name: 'admin')]
     public function index(): Response
     {
-        // 1. On compte les Rendez-vous
-        // (Si tu n'as pas encore de tickets, tu peux mettre 0 à la place du count pour tester)
+        // 1. On compte les Rendez-vous (tous)
         $appointments = $this->entityManager->getRepository(Appointment::class)->count([]);
 
-        $tickets = 0;
-        // Décommente la ligne ci-dessous quand tu auras créé des tickets
-        $tickets = $this->entityManager->getRepository(Ticket::class)->count([]);
+        // 2. On récupère le repository des tickets
+        $ticketRepo = $this->entityManager->getRepository(Ticket::class);
 
-        // 2. On affiche la vue Twig en lui passant les chiffres
+        // 3. On compte spécifiquement les tickets actifs ('Ouvert' et 'En cours')
+        $ticketsOuverts = $ticketRepo->count(['status' => 'Ouvert']);
+        $ticketsEnCours = $ticketRepo->count(['status' => 'En cours']);
+
+        // On fait la somme
+        $tickets = $ticketsOuverts + $ticketsEnCours;
+
+        // 4. On affiche la vue Twig en lui passant les chiffres
         return $this->render('admin/dashboard.html.twig', [
             'countAppointments' => $appointments,
             'countTickets' => $tickets,

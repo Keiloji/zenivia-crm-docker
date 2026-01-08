@@ -60,7 +60,7 @@ class TicketCrudController extends AbstractCrudController
                 'Urgente' => 'danger',
             ]);
 
-        // --- RELATIONS (Le correctif pour votre erreur) ---
+        // --- RELATIONS  ---
         // Ce champ affichera une liste déroulante des Clients.
         yield AssociationField::new('client', 'Client');
 

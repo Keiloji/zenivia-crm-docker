@@ -32,20 +32,20 @@ services:
       - symfony
 ###< doctrine/doctrine-bundle ###
 
-  # Service PHP-FPM : Exécute votre code Symfony
+# Service PHP-FPM
   php:
     build:
-      context: ./docker/php 
-      # Le Dockerfile doit se trouver à l'emplacement docker/php/Dockerfile
+      context: .  # <--- CHANGEMENT ICI : On pointe vers la racine du projet
+      dockerfile: docker/php/Dockerfile # <--- AJOUT ICI : On précise où est le fichier
       target: app_php
     depends_on:
       database:
-        condition: service_healthy # Attend que la DB soit prête
+        condition: service_healthy
     volumes:
-      - .:/srv/app:rw,cached # Monte le code source
-      - ./vendor:/srv/app/vendor:rw # Monte les dépendances Composer
-      - ./var:/srv/app/var:rw # Logs et Cache
-    # Déclare le réseau
+      - .:/srv/app:rw,cached
+      # On garde les autres volumes pour la performance, c'est ok
+      - ./vendor:/srv/app/vendor:rw
+      - ./var:/srv/app/var:rw
     networks:
       - symfony
     restart: unless-stopped

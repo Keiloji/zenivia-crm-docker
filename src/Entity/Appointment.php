@@ -5,8 +5,10 @@ namespace App\Entity;
 use App\Repository\AppointmentRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use ApiPlatform\Metadata\ApiResource;
 
 #[ORM\Entity(repositoryClass: AppointmentRepository::class)]
+#[ApiResource]
 class Appointment
 {
     #[ORM\Id]
